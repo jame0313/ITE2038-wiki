@@ -125,6 +125,7 @@ Free pages are all linked, and page allocation is done by getting a free page fr
 3. Allocated Page
 
 Allocated page are allocated by caller and they're maintained by upper layer.
+
 ---
 ## DSM module(DSM namespace)
 use for Disk Space Manager Layer ONLY!!(DON'T USE IN OTHER LAYERS)
