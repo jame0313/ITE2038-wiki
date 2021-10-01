@@ -106,6 +106,7 @@ and clear DSM::DB_FILE_SET and DSM::DB_PATH_MAP
 ---
 ## PAGE FORMAT IN DSM
 1. Header Page
+
 Header page is the first page (offset 0-4095) of a database file and contains important metadata to manage a list of free pages and file space.
 - Free page number: byte range [0-7]
   - It points to the first free page (head of free page list)
@@ -115,13 +116,15 @@ Header page is the first page (offset 0-4095) of a database file and contains im
 - reserved: byte range [16-4095]
 
 2. Free Page
+
 Free pages are all linked, and page allocation is done by getting a free page from the free page list.
 - Next Free Page Number : byte range [0-7]
   - points the next free page.
   - 0, if end of the free page list.
 
 3. Allocated Page
-Allocated is allocated by caller and it's maintained by upper layer.
+
+Allocated page are allocated by caller and they're maintained by upper layer.
 ---
 ## DSM module(DSM namespace)
 use for Disk Space Manager Layer ONLY!!(DON'T USE IN OTHER LAYERS)
