@@ -29,6 +29,7 @@ when creating DB file, init header page and free page list by linking free page 
 - exceptions
   - if duplicated open occurred in same file, throw "this file has been already opened" msg
   - if open failed, throw "file_open_database_file failed" msg
+  - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 2. pagenum_t file_alloc_page (int fd)
 
@@ -44,6 +45,7 @@ pop free page from list and maintain list linked
 - return value - new page number
 - exceptions
   - if given fd not opened by file_open_database_file, throw "unvalid file descriptor" msg
+  - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 3. void file_free_page(int fd, pagenum_t pagenum)
 
@@ -60,6 +62,7 @@ put the given page in the beginning of the list (LIFO)
 - exceptions
   - if given fd not opened by file_open_database_file, throw "unvalid file descriptor" msg
   - if given pagenum is unvalid, throw "pagenum is out of bound in file_free_page" msg
+  - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 4. void file_read_page(int fd, pagenum_t pagenum, page_t* dest)
 
@@ -75,6 +78,7 @@ It fetches the disk page corresponding to 'page_number' to the in memory buffer 
 - exceptions
   - if given fd not opened by file_open_database_file, throw "unvalid file descriptor" msg
   - if given pagenum is unvalid, throw "pagenum is out of bound in file_read_page" msg
+  - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 5. void file_write_page(int fd, pagenum_t pagenum, const page_t* src)
 
@@ -92,6 +96,7 @@ Disk synced right after write operation by calling fsync
 - exceptions
   - if given fd not opened by file_open_database_file, throw "unvalid file descriptor" msg
   - if given pagenum is unvalid, throw "pagenum is out of bound in file_write_page" msg
+  - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 6. void file_close_database_file()
 
@@ -102,7 +107,10 @@ and clear DSM::DB_FILE_SET and DSM::DB_PATH_MAP
 
 - parameters - (none)
 - return value - (none)
-- exceptions - (none, unless if upper layer close fd or free path string manually)
+- exceptions
+  - if read/write system call failed, throw "(function_name) system call failed!"
+  - if close system call failed, throw "close db file failed"
+  - it may throw other exceptions in free operation or SET and MAP container method.
 ---
 ## PAGE FORMAT IN DSM
 1. Header Page
