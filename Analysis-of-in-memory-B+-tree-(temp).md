@@ -166,7 +166,8 @@ In fourth situation, append k_prime(if it's internal node) and all given node's 
 In fourth situation, this call delete_entry again and it makes recursion. Delete process continues this loop until first or second or third situation occurred.
 
 ---
-## designs or required changes for building on disk B+ tree (in function)
+
+## Designs or required changes for building on disk B+ tree (in function)
 ---
 
 In-memory version use node pointer and record pointer to point leaf and internal node and record itself. In structure section, we discussed about structure in on-disk B+ tree. As we use page as node, we need to change function's parameter first. We can refer specific page with page number by DiskSpaceManager. So we use page number instead of node pointer.
