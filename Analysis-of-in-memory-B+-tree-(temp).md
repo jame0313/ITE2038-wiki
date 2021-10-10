@@ -1,5 +1,5 @@
 # Analysis of in-memory B+ tree
-## Node data structure and modification
+## Node data structure and required changes for building on-disk b+ tree in structure
 ---
 ```
 -leaf node-
@@ -21,7 +21,7 @@ next (not used in find, insert, delete)
 ```
 Note. in bpt code, order means different from lecture's meaning.
 Let D means order of the tree in lecture.
-Then order variable in bpt code equals 2*D + 1
+Then order variable in bpt code equals 2\*D + 1
 > order = 2*D + 1
 
 So, order equals max fan-out in lecture.
@@ -32,7 +32,7 @@ Then, Occupancy Invariant in this tree is as follows
 > D <= (the number of entries) <= 2*D
 
 In leaf node, it stores record pointers array and keys array.
-It stores up to 2*D keys and record pointers and right leaf pointer.
+It stores up to 2\*D keys and record pointers and right leaf pointer.
 Right leaf node's pointer is stored in last pointer in array.
 If the node is rightmost node in the tree, then that pointer value is NULL(0).
 
@@ -89,7 +89,7 @@ find_leaf(root, key): find leaf node that is likely to contain given key
 
 find(root, key): find corresponding leaf node by calling find_leaf and find record to which key refers
 
-cut(length): calculate length(D) with 2*length(D) + 1 to get split or merge threshold etc. we don't have to use in on-disk B+ tree instead we use constant macro.
+cut(length): calculate length(D) with 2\*length(D) + 1 to get split or merge threshold etc. we don't have to use in on-disk B+ tree instead we use constant macro.
 
 make_record(value): make record structure with given value
 
@@ -117,7 +117,7 @@ In first situation, construct new tree root by call make_leaf and insert given k
 
 In second situation, insert given key, pointer into given leaf in right position to remain order.
 
-In third situation, make new leaf by call make_leaf and split 2*D+1 keys and pointers in half(using cut function) and store them in given leaf and new leaf. Set new leaf as given leaf's right leaf and call insert_into_parent(root, leaf, new_leaf's first key(a.k.a. new_key), new_leaf).
+In third situation, make new leaf by call make_leaf and split 2\*D+1 keys and pointers in half(using cut function) and store them in given leaf and new leaf. Set new leaf as given leaf's right leaf and call insert_into_parent(root, leaf, new_leaf's first key(a.k.a. new_key), new_leaf).
 
 After splitting leaf(inserting new record in one of two leaves), we need to insert new leaf's key and new leaf pointer into their parent node. This insert process proceeds according to **three situations again**.
 
@@ -129,7 +129,7 @@ In first situation, construct new tree root by call make_node and insert given k
 
 In second situation, insert given key, pointer into given node in right position(left_index) to remain order.
 
-In third situation, make new node by call make_node and split 2*D+1 keys and 2*D+2 pointers in half(using cut function) and store them in given node(a.k.a. old_node) and new node. In this case, don't store middle key between two nodes and set aside.  Set new node as given node's right node and call insert_into_parent(root, old_node, middle key as we set aside before (a.k.a. k_prime), new_node) to insert new key and node in parent node again.
+In third situation, make new node by call make_node and split 2\*D+1 keys and 2\*D+2 pointers in half(using cut function) and store them in given node(a.k.a. old_node) and new node. In this case, don't store middle key between two nodes and set aside.  Set new node as given node's right node and call insert_into_parent(root, old_node, middle key as we set aside before (a.k.a. k_prime), new_node) to insert new key and node in parent node again.
 
 In third situation, this call insert_into_parent again and it makes recursion. Insert process continues this loop until first or second situation occurred.
 
@@ -151,8 +151,8 @@ After remove key and pointer in the node, later part proceeds according to **fou
 
 1. No parent. Deletion occurred from the root -> call adjust_root(root)
 2. given node has D(find it call by cut) or more keys. (no invariant violation) -> just return root (DONE!)
-3. given node has lower than D keys and sum of two nodes' keys is greater than 2*D (invariant violation, need redistribution) -> find left node's index by call get_neighbor_index and call redistribute_nodes(root, n, left node or right node(if n is leftmost node) (a.k.a. neighbor), neighbor_index, middle key index between two nodes(a.k.a. k_prime_index), k_prime)
-4. given node has lower than D keys and sum of two nodes' keys is lower than and equal to 2*D (invariant violation, need merge) -> find neighbor and middle key like third situation and call coalesce_nodes(root, n, neighbor, neighbor_index, k_prime)
+3. given node has lower than D keys and sum of two nodes' keys is greater than 2\*D (invariant violation, need redistribution) -> find left node's index by call get_neighbor_index and call redistribute_nodes(root, n, left node or right node(if n is leftmost node) (a.k.a. neighbor), neighbor_index, middle key index between two nodes(a.k.a. k_prime_index), k_prime)
+4. given node has lower than D keys and sum of two nodes' keys is lower than and equal to 2\*D (invariant violation, need merge) -> find neighbor and middle key like third situation and call coalesce_nodes(root, n, neighbor, neighbor_index, k_prime)
 
 
 In first situation, if root has key then just end deletion operation, else make first child as new root or return NULL if there is no node anymore(empty case).
@@ -165,6 +165,21 @@ In fourth situation, append k_prime(if it's internal node) and all given node's 
 
 In fourth situation, this call delete_entry again and it makes recursion. Delete process continues this loop until first or second or third situation occurred.
 
+---
+## designs or required changes for building on disk B+ tree (in function)
+---
+
+In-memory version use node pointer and record pointer to point leaf and internal node and record itself. In structure section, we discussed about structure in on-disk B+ tree. As we use page as node, we need to change function's parameter first. We can refer specific page with page number by DiskSpaceManager. So we use page number instead of node pointer.
+
+In this project, we treat values as char pointer. So we just use this pointer instead of record pointer. But as we store such values in page, we need different operation.
+
+In many function, they use node's info and traverse arrays and copying/moving contents by using subscript operator and assignment operator and etc. In on-disk version, we can't directly access page. As we need specific page(node), we need to read/write api in DiskSpaceManager. When we get page, we can access and modify contents like in-memory version. After modification, we need to write api call to save changes in disk.
+
+As we discussed before, memory structure has two separate arrays but in disk page, we use one field and key and page number(instead of pointer) in page body alternately in internal page case. So we can't just traversal page structure like in bpt code. We need to use double offset or make some mapping function(index -> in-page offset) to preserve loop code in bpt. We also need to care about special pointer(next sibling) because storing method is different from these version.
+
+In addition, we have to store values in last part of leaf page's body. So we use slot instead of key, pointer arrays.
+
+Lastly, we use the number of key as split and merge threshold in memory version. As we use variable length field, we use literally ratio of free space as the threshold. So, we need to track free space and check it at every operation to determine whether to modify structure. 
 
 
 
