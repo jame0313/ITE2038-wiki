@@ -178,6 +178,8 @@ In many function, they use node's info and traverse arrays and copying/moving co
 
 As we discussed before, memory structure has two separate arrays but in disk page, we use one field and key and page number(instead of pointer) in page body alternately in internal page case. So we can't just traversal page structure like in bpt code. We need to use double offset or make some mapping function(index -> in-page offset) to preserve loop code in bpt. We also need to care about special pointer(next sibling) because storing method is different from these version.
 
+In some function especially about insertion, we make some node to split or append new node by call malloc. In on-disk version, we also have to call allocate api in DiskSpaceManager to make space for new page. To store this page, we call write api call with allocate api return value(page number).
+
 In addition, we have to store values in last part of leaf page's body. So we use slot instead of key, pointer arrays.
 
 Lastly, we use the number of key as split and merge threshold in memory version. As we use variable length field, we use literally ratio of free space as the threshold. So, we need to track free space and check it at every operation to determine whether to modify structure. 
