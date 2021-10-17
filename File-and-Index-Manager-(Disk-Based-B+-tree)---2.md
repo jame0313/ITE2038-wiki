@@ -257,99 +257,99 @@ inner structure and function used in File and Index Manager
   - FIM::internal_page_t _internal_pag
   - FIM::leaf_page_t _leaf_page
 
-  - pagenum_t make_page(int64_t table_id) 
-    - get page from DSM and return new page number
-  - int change_root_page(int64_t table_id, pagenum_t root_page_number, bool del_tree_flag = false)
-    - change root page number in header page
-    - you can set root page number to 0 when del_tree_flag is on
-    - return 0 if success or -1 if fail
+ - pagenum_t make_page(int64_t table_id) 
+  - get page from DSM and return new page number
+ - int change_root_page(int64_t table_id, pagenum_t root_page_number, bool del_tree_flag = false)
+  - change root page number in header page
+  - you can set root page number to 0 when del_tree_flag is on
+  - return 0 if success or -1 if fail
 
-  - pagenum_t find_leaf_page(int64_t table_id, int64_t key)
-    - find the leaf page in which given key is likely to be
-    - return 0 if there is no tree
-    - throw msg in looping situation (doesn't has key but not leaf)
-     
-  - int find_record(int64_t table_id, int64_t key, char *ret_val = NULL, uint16_t* val_size = NULL)
-    - find the record value with given key
-    - save record valud in ret_val(caller must provide it) and set size in val_size
-    - you can get existence state by using key only and setting ret_val and val_size null
-    - return 0 if success or -1 if fail
-     
-  - int insert_record(int64_t table_id, int64_t key, char *value, uint16_t val_size)
-    - insert master function
-    - insert record in tree
-    - return 0 if success or -1 if failed
-    - if given key is already in tree, return -1
-     
-  - pagenum_t init_new_tree(int64_t table_id, int64_t key, char *value, uint16_t val_size)
-    - make root page and put first record
-    - set initial state in root
-    - return new root page number
-        
-  - void insert_into_leaf_page(pagenum_t leaf_page_number, int64_t table_id, int64_t key, char *value, uint16_t val_size)
-    - insert record in given leaf page
-    - push key in sorted order and push value in right next free space (packed)
-     
-  - int insert_into_leaf_page_after_splitting(pagenum_t leaf_page_number, int64_t table_id, int64_t key, char *value, uint16_t val_size)
-    - make new pages and split records in leaf page and new record into two pages evenly
-    - Set the first record that is equal to or greater than 50% of the total size
-    - on the Page Body as the point to split, and then move that record, and all records
-    - after that to the new leaf page.
-    - set new leaf page at right of old leaf page
-    - need push new key(new leaf's first key) and new leaf page in parent's page
-    - return insert_into_parent_page call(next phase)
-     
-  - int insert_into_parent_page(pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
-    - insert key and right page number in parent page
-    - return 0 if success
-     
-  - pagenum_t insert_into_new_root_page(pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
-    - make new root page and set initial state
-    - put left page #, key, right page # in new root page
-    - connect two given pages to new root page as parent
-    - return new root page number
-     
-  - void insert_into_page(pagenum_t page_number, pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
-    - insert key and right page number in given page
-    - push key and page # in sorted order
-     
-  - int insert_into_page_after_splitting(pagenum_t page_number, pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
-    - make new pages
-    - split key and page number in page and new data (key and right page #) into two pages evenly
-    - old page has DEFAULT_ORDER keys and new page has DEFAULT_ORDER keys as a result
-    - set new page at right of old page
-    - need push middle key and new page in parent's page
-    - return insert_into_parent_page call 
-     
-  - int delete_record(int64_t table_id, int64_t key)
-    - delete master function
-    - delete key and corresponding value in tree
-    - return 0 if success or -1 if fail
-    - if there is no such key, return -1
-     
-  - int delete_entry(pagenum_t page_number, int64_t table_id, int64_t key)
-    - delete key(and corresponding data(page number or value)) and in page
-    - and make tree obey key occupancy invariant
-    - return 0 if success or -1 if failed
-     
-  - void remove_entry_from_page(pagenum_t page_number, uint64_t table_id, int64_t key)
-    - remove key and data in page
-    - data is value(leaf page) or page number(internal page)
-    - fill gap caused by deleting key
-     
-  - pagenum_t adjust_root_page(pagenum_t root_page_number, int64_t table_id)
-    - deal with root page changes
-    - use child as root or delete tree when root page is empty
-    - return existed root page number or 0 if entire tree is deleted
-    - return new root page number if root page is changed
-     
-  - int merge_pages(pagenum_t page_number, int64_t table_id, int64_t middle_key, pagenum_t neighbor_page_number, bool is_leftmost) 
-    - move all page's contents to neighbor page
-    - to merge two pages into one page
-    - need delete right page number in parent page
-    - return delete_entry call
+ - pagenum_t find_leaf_page(int64_t table_id, int64_t key)
+  - find the leaf page in which given key is likely to be
+  - return 0 if there is no tree
+  - throw msg in looping situation (doesn't has key but not leaf)
+   
+ - int find_record(int64_t table_id, int64_t key, char *ret_val = NULL, uint16_t* val_size = NULL)
+  - find the record value with given key
+  - save record valud in ret_val(caller must provide it) and set size in val_size
+  - you can get existence state by using key only and setting ret_val and val_size null
+  - return 0 if success or -1 if fail
+   
+ - int insert_record(int64_t table_id, int64_t key, char *value, uint16_t val_size)
+  - insert master function
+  - insert record in tree
+  - return 0 if success or -1 if failed
+  - if given key is already in tree, return -1
+   
+ - pagenum_t init_new_tree(int64_t table_id, int64_t key, char *value, uint16_t val_size)
+  - make root page and put first record
+  - set initial state in root
+  - return new root page number
     
-  - void redistribute_pages(pagenum_t page_number, int64_t table_id, int64_t middle_key, pagenum_t neighbor_page_number, bool is_leftmost)
-    - move some page's contents to neighbor page
-    - pull a record from neighbor page until its free space becomes
-    - smaller than the threshold 
+ - void insert_into_leaf_page(pagenum_t leaf_page_number, int64_t table_id, int64_t key, char *value, uint16_t val_size)
+  - insert record in given leaf page
+  - push key in sorted order and push value in right next free space (packed)
+   
+ - int insert_into_leaf_page_after_splitting(pagenum_t leaf_page_number, int64_t table_id, int64_t key, char *value, uint16_t val_size)
+  - make new pages and split records in leaf page and new record into two pages evenly
+  - Set the first record that is equal to or greater than 50% of the total size
+  - on the Page Body as the point to split, and then move that record, and all records
+  - after that to the new leaf page.
+  - set new leaf page at right of old leaf page
+  - need push new key(new leaf's first key) and new leaf page in parent's page
+  - return insert_into_parent_page call(next phase)
+   
+ - int insert_into_parent_page(pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
+  - insert key and right page number in parent page
+  - return 0 if success
+   
+ - pagenum_t insert_into_new_root_page(pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
+  - make new root page and set initial state
+  - put left page #, key, right page # in new root page
+  - connect two given pages to new root page as parent
+  - return new root page number
+   
+ - void insert_into_page(pagenum_t page_number, pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
+  - insert key and right page number in given page
+  - push key and page # in sorted order
+   
+ - int insert_into_page_after_splitting(pagenum_t page_number, pagenum_t left_page_number, int64_t table_id, int64_t key, pagenum_t right_page_number)
+  - make new pages
+  - split key and page number in page and new data (key and right page #) into two pages evenly
+  - old page has DEFAULT_ORDER keys and new page has DEFAULT_ORDER keys as a result
+  - set new page at right of old page
+  - need push middle key and new page in parent's page
+  - return insert_into_parent_page call 
+   
+ - int delete_record(int64_t table_id, int64_t key)
+  - delete master function
+  - delete key and corresponding value in tree
+  - return 0 if success or -1 if fail
+  - if there is no such key, return -1
+   
+ - int delete_entry(pagenum_t page_number, int64_t table_id, int64_t key)
+  - delete key(and corresponding data(page number or value)) and in page
+  - and make tree obey key occupancy invariant
+  - return 0 if success or -1 if failed
+   
+ - void remove_entry_from_page(pagenum_t page_number, uint64_t table_id, int64_t key)
+  - remove key and data in page
+  - data is value(leaf page) or page number(internal page)
+  - fill gap caused by deleting key
+   
+ - pagenum_t adjust_root_page(pagenum_t root_page_number, int64_t table_id)
+  - deal with root page changes
+  - use child as root or delete tree when root page is empty
+  - return existed root page number or 0 if entire tree is deleted
+  - return new root page number if root page is changed
+   
+ - int merge_pages(pagenum_t page_number, int64_t table_id, int64_t middle_key, pagenum_t neighbor_page_number, bool is_leftmost) 
+  - move all page's contents to neighbor page
+  - to merge two pages into one page
+  - need delete right page number in parent page
+  - return delete_entry call
+  
+ - void redistribute_pages(pagenum_t page_number, int64_t table_id, int64_t middle_key, pagenum_t neighbor_page_number, bool is_leftmost)
+  - move some page's contents to neighbor page
+  - pull a record from neighbor page until its free space becomes
+  - smaller than the threshold 
