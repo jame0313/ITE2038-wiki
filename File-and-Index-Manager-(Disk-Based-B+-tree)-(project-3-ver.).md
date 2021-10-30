@@ -2,7 +2,7 @@
 The file and index manager manages record and file organization by
 using disk-based b+ tree (b+ tree index) to expertize access method.
 
-By using disk space manager, file and index manager's operation result loaded from file or stored in file.
+By using buffer manager, file and index manager's operation result loaded from buffer or stored in buffer.
 
 In database, record is consisted of key and value. The value is variable-length field. The record can be inserted, deleted, found by using table ID and key.
 
@@ -12,25 +12,8 @@ Each page is roughly divided into four types: Header Page, Free Page, Leaf page,
 ------
 
 ##  FILE AND INDEX MANAGER API
-1. int64_t open_table(char *pathname)
 
-- Open the database file.
-
-Open existing data file using 'pathname' or create one if not existed.
-If a new file needs to be created, the default file size should be 10 MiB
-If success, return the unique table id, which represents the own table in this database.
-Otherwise, return negative value.
-
-Call file_open_table_file(pathname) to use Disk Space Manager API.
-
-- parameters
-  - pathname - pathname to database file
-
-- return value - table id of the opened database file
-- exceptions
-  - if error occurred in Disk Space Manager API, print error message and return -1
----
-2. int db_insert(int64_t table_id, int64_t key, char *value, uint16_t val_size)
+1. int inx_insert_by_key(int64_t table_id, int64_t key, char *value, uint16_t val_size)
 
 - Insert a record.
 
@@ -49,9 +32,9 @@ Check violating the B+ tree properties and modify tree structure to ensure occup
 
 - return value - status code(0 is ok)
 - exceptions
-  - if error occurred in File and Index manager module or Disk Space Manager API, print error message and return -1
+  - if error occurred in File and Index manager module or Sub Layer API, print error message and return -1
 ---
-3. int db_delete(int64_t table_id, int64_t key)
+2. int idx_delete_by_key(int64_t table_id, int64_t key)
 
 - Delete a record
 
@@ -68,9 +51,9 @@ Check violating the B+ tree properties and modify tree structure to ensure occup
 
 - return value - status code(0 is ok)
 - exceptions
-  - if error occurred in File and Index manager module or Disk Space Manager API, print error message and return -1
+  - if error occurred in File and Index manager module or Sub Layer API, print error message and return -1
 ---
-4. int db_find(int64_t table_id, int64_t key, char *ret_val, uint16_t *val_size);
+3. int idx_find_by_key(int64_t table_id, int64_t key, char *ret_val, uint16_t *val_size);
 
 - Find a record.
 
@@ -89,37 +72,7 @@ Only existed key value record can be found. Otherwise, API return non zero value
 
 - return value - status code(0 is ok)
 - exceptions
-  - if error occurred in File and Index manager module or Disk Space Manager API, print error message and return -1
----
-5. int init_db()
-
-- Initialize DBMS
-
-Initialize database management system.
-If success, return 0. Otherwise, return non zero value.
-
-Before starting DBMS, each layer initialize their status if needed.
-In Disk Space Manager and File and Index Manager, there is nothing to do for now. 
-
-- parameters - (none)
-
-- return value - status code(0 is ok)
-- exceptions - (none)
----
-6. int shutdown_db()
-
-- Shutdown DBMS
-
-Shutdown your database management system.
-If success, return 0. Otherwise, return non zero value.
-
-Before shutdown DBMS, each layer finish and save their status if needed.
-In Disk Space Manager, close all file by calling file_close_table_file API.
-
-- parameters - (none)
-- return value - status code(0 is ok)
-- exceptions
-  - if error occurred in Disk Space Manager API, print error message and return -1
+  - if error occurred in File and Index manager module or Sub Layer API, print error message and return -1
 ---
 ## PAGE FORMAT IN FIM
 1. Header Page
@@ -258,7 +211,7 @@ inner structure and function used in File and Index Manager
   - FIM::leaf_page_t _leaf_page
 
 - pagenum_t make_page(int64_t table_id) 
-  - get page from DSM and return new page number
+  - get page from BM and return new page number
 
 - int change_root_page(int64_t table_id, pagenum_t root_page_number, bool del_tree_flag = false)
   - change root page number in header page
