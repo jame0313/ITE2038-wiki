@@ -1,5 +1,7 @@
-#API INSTRUCTION
+# API INSTRUCTION
+
 To distinguish File and Index Manager API and global API(such as init_db and shutdown_db), copy File and Index  Manager API to api file. In global API, function calls corresponding layer api call.
+
 -----
 ## API Functions
 1. int64_t open_table(char *pathname)
