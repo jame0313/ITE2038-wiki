@@ -13,7 +13,7 @@ Each page is roughly divided into four types: Header Page, Free Page, Leaf page,
 
 ##  FILE AND INDEX MANAGER API
 
-1. int inx_insert_by_key(int64_t table_id, int64_t key, char *value, uint16_t val_size)
+1. int idx_insert_by_key(int64_t table_id, int64_t key, char *value, uint16_t val_size)
 
 - Insert a record.
 
