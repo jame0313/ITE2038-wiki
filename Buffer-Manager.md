@@ -189,7 +189,30 @@ inner structure and function used in Buffer Manager
   - BM::header_page_t _header_page;
   - BM::free_page_t _free_page;
 
-- flush_frame_to_file(blknum_t blknum) 
+- frame_t *frame_list
+  - frame(page) array
+
+- BM::ctrl_blk *ctrl_blk_list
+  - ctrl block(frame_ptr + info) array
+
+- std::unordered_map<page_id, blknum_t, BM::hash_pair> hash_table
+  - hash table that mapping page id to corresponding ctrl block in the list
+  - search key is page_id({table_id, pagenum})
+  - corresponding value is block number
+  - use BM::hash_pair to hash pair object
+
+- size_t BUFFER_SIZE
+  - length of buffer array
+
+- blknum_t ctrl_blk_list_front
+  - LRU list front pointer
+  - point LRU block number
+
+- blknum_t ctrl_blk_list_back
+  - LRU list back pointer
+  - point MRU block number
+
+- void flush_frame_to_file(blknum_t blknum) 
   - get corresponding block in the list
   - flush such page to disk by calling DSM write api
 
