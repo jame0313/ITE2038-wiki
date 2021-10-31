@@ -23,6 +23,8 @@ Also, initialize hash table for finding page with table and page id.
 
 If success, return 0. Otherwise, return non zero value.
 
+**num_buf** should be enough to use upper layer freely. num_buf should be greater and equal to maximum number of pinned page that use simultaneously. In our File And Index Manager(project 3 ver.) use up to 3 pages simultaneously(i.e. insert_into_new_root_page).
+
 - parameters
   - num_buf - number of buffer pool entries
 
