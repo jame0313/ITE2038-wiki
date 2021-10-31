@@ -27,42 +27,36 @@ If success, return 0. Otherwise, return non zero value.
   - num_buf - number of buffer pool entries
 
 - return value - status code(0 is ok)
+
 - exceptions - (none)
 ---
 2. pagenum_t buffer_alloc_page(int64_t table_id)
 
-- Allocate a page
+- Allocate a page and load it to buffer
 
-Get header page block
-If success, return 0. Otherwise, return non zero value.
-
-Only existed key value record can be deleted. Otherwise, API return non zero value.
-
-Check violating the B+ tree properties and modify tree structure to ensure occupancy invariant if it needed.
+Allocate a new page by calling DSM api and load new page to buffer.
+Set this page pin on because this API called to write something to new page.
 
 - parameters
   - table_id - table id of the opened database
 
 - return value - page number
 - exceptions
-  - if error occurred in Buffer manager module or Sub Layer API, print error message and return -1
+  - if error occurred in buffer manager module or Sub Layer API, throw error message
 ---
 3. void buffer_free_page(int64_t table_id, pagenum_t pagenum)
 
-- Free a page
+- Free a page and discard it from buffer
 
-Find the record containing input key.
-If found matching key, store matched value string in ret_val and matched size in val_size.
-If success, return 0. Otherwise, return non zero value.
-The caller should allocate memory for a record structure.
-
-Only existed key value record can be found. Otherwise, API return non zero value.
+Free a given page by calling DSM api and discard given page from buffer.
+Set this page dirty bit off since we considered dummy page as undirty page and not-accesed page by upper layer at all.
 
 - parameters
   - table_id - table id of the opened database
   - pagenum - page number to be freed
 
 - return value - (none)
+
 - exceptions
   - if error occurred in buffer manager module or Sub Layer API, throw error message
 ---
@@ -75,6 +69,7 @@ If found matching block, copy page content to dest.
 Upper layer uses dest to access content.
 Only to be written page get pinned to reduce disk io. (to be written page means there is access soon and we prevent this page to be evicted)
 As we copy buffer contents to upper layer, we can evict such page freely when read only mode only.
+Skipping pinning read only page is similar that this page will be unpinned as soon as possible after return.
 Upper layer sets readonly flag to distinguish this property.
 
 - parameters
@@ -82,7 +77,9 @@ Upper layer sets readonly flag to distinguish this property.
   - pagenum - page number to read
   - dest - dest to write
   - readonly - read only flag (whether to pin)
+
 - return value - (none)
+
 - exceptions
   - if corresponding page already has pinned, throw "double write access".
   - if error occurred in buffer manager module or Sub Layer API, throw error message
@@ -101,7 +98,9 @@ After writing page, set dirty property on and unpin it.
   - table_id - table id of the opened database
   - pagenum - page number to read
   - src - source page to write to buffer
+
 - return value - (none)
+
 - exceptions
   - if corresponding page is unpinned, throw "invalid write access".
   - if error occurred in buffer manager module or Sub Layer API, throw error message
