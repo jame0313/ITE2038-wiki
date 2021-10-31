@@ -15,11 +15,13 @@ During page eviction by LRU policy, the victim page stored in disk by DSM.
 - initialize buffer manager.
 
 Allocate the buffer pool and init LRU linked list with the given number of entries.
-If success, return 0. Otherwise, return non zero value.
 
 Point corresponding frame and connect neighbor control block with prev and next block number or set -1 if not existed.
+This makes buffer array filled with dummy page. (To use only eviction logic, we initialize LRU list full with dummy page. As we only flush dirty page, this dummy page doesn't flush at all and doesn't occupy hash table.)
 
 Also, initialize hash table for finding page with table and page id.
+
+If success, return 0. Otherwise, return non zero value.
 
 - parameters
   - num_buf - number of buffer pool entries
@@ -72,6 +74,7 @@ Find the buffer block containing input table id and page number.
 If found matching block, copy page content to dest.
 Upper layer uses dest to access content.
 Only to be written page get pinned to reduce disk io. (to be written page means there is access soon and we prevent this page to be evicted)
+As we copy buffer contents to upper layer, we can evict such page freely when read only mode only.
 Upper layer sets readonly flag to distinguish this property.
 
 - parameters
