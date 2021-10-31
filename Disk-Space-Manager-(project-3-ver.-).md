@@ -31,11 +31,13 @@ when creating DB file, init header page and free page list by linking free page 
   - if open failed, throw "file_open_database_file failed" msg
   - if read/write system call failed, throw "(function_name) system call failed!"
 ---
-2. (deprecated) pagenum_t file_alloc_page (int64_t table_id)
+2. pagenum_t file_alloc_page (int64_t table_id)
 
 - Allocate a page.
 It returns a new page number from the free page list.
 If the free page list is empty, then it should grow the database file twice and return a free page number.
+
+**USE WILDCARD API TO GET HEADER PAGE NEWEST DATA.**
 
 pop free page from list and maintain list linked
 
@@ -47,10 +49,12 @@ pop free page from list and maintain list linked
   - if given table_id not opened by file_open_database_file, throw "unvalid tabld id" msg
   - if read/write system call failed, throw "(function_name) system call failed!"
 ---
-3. (deprecated) void file_free_page(int64_t table_id, pagenum_t pagenum)
+3. void file_free_page(int64_t table_id, pagenum_t pagenum)
 
 - Free a page
 It informs the disk space manager of returning the page with 'page_number' for freeing it to the free page
+
+**USE WILDCARD API TO GET HEADER PAGE NEWEST DATA.**
 
 put the given page in the beginning of the list (LIFO)
 
@@ -78,8 +82,7 @@ It fetches the disk page corresponding to 'page_number' to the in memory buffer 
 - return value - (none)
 - exceptions
   - if given table_id not opened by file_open_database_file, throw "unvalid tabld id" msg
-  - (deprecated) if given pagenum is unvalid, throw "pagenum is out of bound in file_read_page" msg
-  - (new) if given pagenum is unvalid, just try read(upper layer handle this)
+  - if given pagenum is unvalid, throw "pagenum is out of bound in file_read_page" msg
   - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 5. void file_write_page(int64_t table_id, pagenum_t pagenum, const page_t* src)
@@ -97,8 +100,7 @@ Disk synced right after write operation by calling fsync
 - return value - (none)
 - exceptions
   - if given table_id not opened by file_open_database_file, throw "unvalid tabld id" msg
-  - (deprecated) if given pagenum is unvalid, throw "pagenum is out of bound in file_write_page" msg
-  - (new) if given pagenum is unvalid, just write it (upper layer handle this)
+  - if given pagenum is unvalid, throw "pagenum is out of bound in file_write_page" msg
   - if read/write system call failed, throw "(function_name) system call failed!"
 ---
 6. void file_close_table_file()
