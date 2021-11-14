@@ -46,8 +46,7 @@ If not, the new object append in the end of the list and wait for the turn.
   - key - record id of the opened database
 
 - return value - lock object's address or NULL if error occured
-- exceptions
-  - if error occurred in pthread API, throw error message
+- exceptions - (none)
 ---
 3. int lock_release(lock_t* lock_obj)
 
@@ -61,8 +60,7 @@ If there is successor in the list, connect it with prev object(head object) and 
   - lock_obj - lock object to be released
 
 - return value - status code(0 is ok)
-- exceptions
-  - if error occurred in pthread API, throw error message
+- exceptions - (none)
 ---
 
 ## LOCK TABLE MODULE
