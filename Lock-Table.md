@@ -41,6 +41,8 @@ If there is no head object in hash table, make new head object and connect with 
 If there is no predecessor in the list, just connect new object with head object and return it's address immediately.
 If not, the new object append in the end of the list and wait for the turn.
 
+If head object info mismatched with given parameter, return NULL.
+
 - parameters
   - table_id - table id of the opened database
   - key - record id of the opened database
@@ -79,6 +81,8 @@ inner structure and function used in Lock table
     - conditional variable used in waiting in lock table
   - bool flag
     - flag for conditional variable
+  - record_id rid
+    - record id info for head object
 
 - struct hash_pair
   - inner structure for hashing std::pair object
