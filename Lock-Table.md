@@ -87,13 +87,13 @@ inner structure and function used in Lock table
   - size_t operator()(const std::pair<T1, T2>& p) const
     - hash pair object by rearrange two hash value from each object's hash value.
 
-- page_id
+- record_id
   - std::pair<int64_t, int64_t>
   - combine two property with pair
  
-- std::unordered_map<page_id, lock_t*, hash_pair> hash_table
-  - hash table that mapping page id to corresponding head lock object in lock table
-  - search key is page_id({table_id, key})
+- std::unordered_map<record_id, lock_t*, hash_pair> hash_table
+  - hash table that mapping record id to corresponding head lock object in lock table
+  - search key is record_id({table_id, key})
   - corresponding value is lock obejct's address
   - use hash_pair to hash pair object
 
