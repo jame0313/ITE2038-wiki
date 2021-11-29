@@ -175,7 +175,8 @@ Delete all lock header object and destroy lock hash table
 
 ---
 ## LOCK OBJECT FORMAT (defined in page.h) AND OTHER FORMAT
-1. LOCK
+1. LOCK (lock_t)
+
 Lock object is the entry of page lock list that contains lock information.
 - pthread_cond_t cond = PTHREAD_COND_INITIALIZER
   - conditional variable for waiting for conflicting lock release
@@ -196,7 +197,8 @@ Lock object is the entry of page lock list that contains lock information.
 - int waiting_num = 0
   - the number of conflicting lock (mark the lock is sleeping or not)
 
-2. LOCK HEADER
+2. LOCK HEADER (lock_head_t)
+
 Lock header in page lock list to access record-level lock entries
 - int64_t table_id
 - pagenum_t page_id
