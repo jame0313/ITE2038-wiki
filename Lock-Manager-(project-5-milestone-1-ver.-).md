@@ -163,6 +163,8 @@ This API is equivalent as several lock_release API call.
 
 - Destroy lock table
 
+This API requires lock manager Latch.
+
 Delete all lock header object and destroy lock hash table
 
 - parameters - (none)
