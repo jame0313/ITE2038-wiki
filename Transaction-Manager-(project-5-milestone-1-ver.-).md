@@ -58,7 +58,7 @@ New transaction entry has empty log list and empty lock list.
 
 - Commit the transaction
 
-***This API requires both transaction manager Latch and lock manager Lath.***
+***This API requires both transaction manager Latch and lock manager Latch.***
 
 In this API, it uses the lock manager API that requires explicitly acquiring lock manager latch.
 
@@ -78,7 +78,7 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 
 - Abort the transaction and rollback effects
 
-***This API requires both transaction manager Latch and lock manager Lath.***
+***This API requires both transaction manager Latch and lock manager Latch.***
 
 In this API, it uses the lock manager API that requires explicitly acquiring lock manager latch.
 
@@ -159,7 +159,7 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 
 - Rollback all uncommitted result and destroy transaction table
 
-***This API requires both transaction manager Latch and lock manager Lath.***
+***This API requires both transaction manager Latch and lock manager Latch.***
 
 In this API, it uses the lock manager API that requires explicitly acquiring lock manager latch.
 
