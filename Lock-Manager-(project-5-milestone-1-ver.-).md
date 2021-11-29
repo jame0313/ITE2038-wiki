@@ -43,7 +43,7 @@ Same transaction case table
 
 1. int init_lock_table(void)
 
-- initialize buffer manager.
+- initialize lock manager.
 
 Initialize lock hash table for finding page lock list and lock manager latch.
 
