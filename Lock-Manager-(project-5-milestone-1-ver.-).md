@@ -218,7 +218,7 @@ use for Lock Manager Layer ONLY!!(DON'T USE IN OTHER LAYERS)
 
 inner structure and function used in Lock Manager
 
-- pthread_mutex_t lock_manager_latch = PTHREAD_MUTEX_INITIALIZER;
+- pthread_mutex_t lock_manager_latch = PTHREAD_MUTEX_INITIALIZER
   - global lock manager latch
 
 - std::unordered_map<page_id, lock_head_t*, LM::hash_pair> lock_table
