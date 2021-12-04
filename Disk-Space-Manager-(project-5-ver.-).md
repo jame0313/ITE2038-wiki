@@ -6,6 +6,10 @@ loading and saving pages between disk and memory.
 The database file consists of a set of 4KiB pages.
 Each page is roughly divided into three types: Header Page, Free Page, Allocated Page
 
+***CHANGES IN PROJECT 5***
+
+Due to avoid timeout in test server, DSM now use O_SYNC mode instead of call fsync function at every write call.
+
 ------
 
 ##  DISK SPACE MANANGER API
@@ -90,7 +94,7 @@ It fetches the disk page corresponding to 'page_number' to the in memory buffer 
 - Write a page.
 It writes the in memory page content in the buffer (i.e. 'src') to the disk page pointed by page_number
 
-Disk synced right after write operation by calling fsync
+~~Disk synced right after write operation by calling fsync~~
 
 - parameters
   - table_id - table id of the opened database file
