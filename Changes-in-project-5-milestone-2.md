@@ -4,6 +4,8 @@ There are some changes in several managers to implement implicit locking and loc
 
 There can be new API or changes in the previous API or some changes in struct.
 
+For instance, bitmap needed for lock compression and transaction id in slot needed for implicit lock.
+
 ------
 
 ##  CHANGES IN File and Index Manager
@@ -12,6 +14,7 @@ There can be new API or changes in the previous API or some changes in struct.
 To implement implicit exclusive lock, record's slot needs space for writing transaction id that acquired exclusive lock without explicitly inserting a lock object.
 
 Using trx_id field in slot, transaction can check existence of implicit lock or set implicit lock by using new API in Index manager.
+
 ---
 2. int idx_get_trx_id_in_slot(int64_t table_id, pagenum_t page_id, uint32_t slot_number)
 
@@ -20,6 +23,7 @@ Using trx_id field in slot, transaction can check existence of implicit lock or 
 Read the target page by using buffer direct read & write API and return transaction id in the slot.
 
 This information can be used in lock and transaction manager for checking transaction id in the slot.
+
 ---
 3. void idx_set_trx_id_in_slot(int64_t table_id, pagenum_t page_id, uint32_t slot_number, int trx_id)
 
@@ -47,7 +51,7 @@ In each log entry, release implicit lock by setting trx_id field in slot to 0 by
 
 ***This is unnecessary inner function as lock manager can check transaction id by looking up transaction table (figure out given id is active)***
 
-But as I don't implement avoiding wrap-around id in project 5 (It will need in further project), this function used temporary for minor exception handling.
+But as I don't implement avoiding wrap-around transaction id in project 5 (It will need in further project), this function used temporary for minor exception handling.
 
 ---
 3. changes in append_lock_in_table
@@ -67,10 +71,12 @@ This changes can affect to trx_append_lock_in_trx_list API.
 
 To implement lock compression, lock object needs some space to express multiple same type of locks in single object.
 
+Each bit represents corresponding slot number.
+
 By using this bitmap, lock manager can check compatible lock, deadlock, and successor lock to wake up in record-wise.
 
 ---
-2. Use bitmap in deadlock detection, waking conflict lock, and find compatible lock
+2. Use bitmap in deadlock detection, waking conflict lock up, and finding compatible lock
 
 In judging whether these two locks are conflicting or not, use bitwise and to represent intersection that indicates confliction in addition to comparing key value.
 
