@@ -113,7 +113,24 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 - exceptions - (none)
 
 ---
-6. int trx_add_log(int64_t table_id, int64_t key, char *new_values, uint16_t new_val_size, char *old_values, uint16_t old_val_size, int trx_id)
+6. int trx_remove_lock_in_trx_list(int trx_id, lock_t* lock_obj)
+
+- Remove given lock object to given transaction lock list in transaction table
+
+This API requires transaction manager Latch.
+
+In invalid transaction(e.g. aborted transaction) case, just return 0.
+
+- parameters
+  - trx_id - transaction id of the transaction lock list where insertion occurred
+  - lock_obj - lock object to be appended
+
+- return value - the transaction id if success, otherwise return 0
+
+- exceptions - (none)
+
+---
+7. int trx_add_log(int64_t table_id, pagenum_t page_id, int64_t key, uint32_t slot_number, char *new_values, uint16_t new_val_size, char *old_values, uint16_t old_val_size, int trx_id)
 
 - Append update log to transaction log list
 
@@ -125,7 +142,9 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 
 - parameters
   - table_id - table where update operation occurred
+  - page_id - page number where target record reside
   - key - key of target record
+  - slot_number - slot number where target record reside
   - new_values - new value that changed to
   - new_val_size - length of new value string
   - old_values - old value that changed from
@@ -137,7 +156,7 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 - exceptions - (none)
 
 ---
-7. lock_t* trx_get_last_lock_in_trx_list(int trx_id)
+8. lock_t* trx_get_last_lock_in_trx_list(int trx_id)
 
 - Get last lock object in given transaction lock list
 
@@ -155,7 +174,26 @@ In invalid transaction(e.g. aborted transaction) case, just return 0.
 - exceptions - (none)
 
 ---
-8. void close_trx_manager()
+9. int trx_is_this_trx_valid(int trx_id)
+
+- Check given transaction id is valid
+
+This API requires transaction manager Latch.
+
+Check given transaction is alive or invalid (e.g. aborted or committed)
+by using transaction table.
+
+If error occurred, just return -1.
+
+- parameters
+  - trx_id - transaction id to be checked
+
+- return value - status code(1 is alive, 0 is dead(invalid), -1 is error case)
+
+- exceptions - (none)
+
+---
+10. void close_trx_manager()
 
 - Rollback all uncommitted result and destroy transaction table
 
@@ -198,8 +236,12 @@ Transaction log object that contains update information.
   - point to new value string
 - int64_t table_id
   - target table
+- pagenum_t page_id
+  - target page number
 - int64_t key
   - target record key
+- uint32_t slot_number
+  - target slot number
 - uint16_t old_size
   - old value string length
 - uint16_t new_size
