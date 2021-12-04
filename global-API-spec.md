@@ -112,3 +112,82 @@ In Disk Space Manager, close all file by calling file_close_table_file API.
 - return value - status code(0 is ok)
 - exceptions
   - if error occurred in Sub Layer API, print error message and return -1
+---
+7. int db_find(int64_t table_id, int64_t key, char *ret_val, uint16_t *val_size, int trx_id)
+
+- Find a record.
+
+Read a value in the table with a matching key for the transaction having transaction id
+If found matching key, store matched value string in ret_val and matched size in val_size.
+If success, return 0. Otherwise, return non zero value.
+The caller should allocate memory for a record structure.
+
+Only existed key value record can be found. Otherwise, API return non zero value.
+
+return 0 (SUCCESS): operation is successfully done, and the transaction can continue the next operation.
+return non zero (FAILED): operation is failed (e.g., deadlock detected), and the transaction should be aborted.
+
+- parameters
+  - table_id - table id of the opened database
+  - key - record key to find
+  - value - destination memory of record value
+  - val_size - record value's length
+  - trx_id - id of transaction which called this api 
+
+- return value - status code(0 is ok)
+- exceptions
+  - if error occurred in File and Index manager module or Sub layer API, print error message and return -1
+---
+8. int db_update(int64_t table_id, int64_t key, char *values, uint16_t new_val_size, uint16_t *old_val_size, int trx_id)
+
+- Update a record.
+
+Find target record and modify the values for the transaction having transaction id
+If found matching key, update the value of the record to values string with its new_val_size and store its size in old_val_size
+If success, return 0. Otherwise, return non zero value.
+The caller should allocate memory for a old_val_size
+
+Only existed key value record can be found. Otherwise, API return non zero value.
+
+return 0 (SUCCESS): operation is successfully done, and the transaction can continue the next operation.
+return non zero (FAILED): operation is failed (e.g., deadlock detected), and the transaction should be aborted.
+
+- parameters
+  - table_id - table id of the opened database
+  - key - record key to find
+  - values - new value string to be applied into record
+  - new_val_size - new value string's length
+  - old_val_size - existed record value's length
+  - trx_id - id of transaction which called this api 
+
+- return value - status code(0 is ok)
+- exceptions
+  - if error occurred in File and Index manager module or Sub layer API, print error message and return -1
+---
+9. int trx_begin(void)
+
+- Begin new transaction
+
+Allocate a transaction structure and initialize it
+Return a unique transaction id (>= 1) if success, otherwise return 0.
+
+- parameters - (none)
+
+- return value - new transaction id, otherwise return 0
+- exceptions - (none)
+---
+10. int trx_commit(int trx_id)
+
+- Commit and end the transaction
+
+Clean up the transaction with the given trx_id (transaction id) and its related information that has been used in your lock manager.
+
+This is shrinking phase of strict 2PL.
+
+Return the completed transaction id if success, otherwise return 0.
+
+- parameters
+  - trx_id - id of transaction to be committed
+
+- return value - completed trx id if success, otherwise return 0
+- exceptions - (none)
