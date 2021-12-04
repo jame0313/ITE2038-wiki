@@ -4,6 +4,8 @@ using disk-based b+ tree (b+ tree index) to expertize access method.
 
 By using buffer manager, file and index manager's operation result loaded from buffer or stored in buffer.
 
+To implement transaction concept, Index manager uses lock & transaction manager API. Due to strict-2PL, it tries to acquire corresponding lock by lock manager API before access record. If there is error(e.g. deadlock), it calls abort API to rollback all effects. Before the end of update operation, it should make update log by calling transaction manager API.
+
 In database, record is consisted of key and value. The value is variable-length field. The record can be inserted, deleted, found by using table ID and key.
 
 The database file consists of a set of 4KiB pages.
@@ -73,6 +75,103 @@ Only existed key value record can be found. Otherwise, API return non zero value
 - return value - status code(0 is ok)
 - exceptions
   - if error occurred in File and Index manager module or Sub Layer API, print error message and return -1
+---
+4. int idx_find_by_key_trx(int64_t table_id, int64_t key, char *ret_val, uint16_t *val_size, int trx_id);
+
+- Find a record for the transaction having trx_id
+
+Read a value in the table with a matching key for the transaction having transaction id
+If found matching key, store matched value string in ret_val and matched size in val_size.
+If success, return 0. Otherwise, return non zero value.
+The caller should allocate memory for a record structure.
+
+After find target record by key, try to acquire shared lock by calling lock manager API.
+If there is any failure in locking, abort given transaction by calling transaction manager API and return -1.
+After acquiring corresponding lock, read page and get target record value.
+
+By using special buffer API (direct read\write page), multiple threads read record parallel or write record concurrently in same page.
+
+As buffer manager use page latch, Index manager release page latch right after find operation done.
+
+Only existed key value record can be found. Otherwise, API return non zero value.
+
+return 0 (SUCCESS): operation is successfully done, and the transaction can continue the next operation.
+
+return non zero (FAILED): operation is failed (e.g., deadlock detected), and the transaction should be aborted.
+
+- parameters
+  - table_id - table id of the opened database
+  - key - record key to find
+  - value - destination memory of record value
+  - val_size - record value's length
+  - trx_id - id of transaction which called this api 
+
+- return value - status code(0 is ok)
+- exceptions
+  - if error occurred in File and Index manager module or Sub Layer API, print error message and abort transaction and return -1
+---
+5. int idx_update_by_key(int64_t table_id, int64_t key, char *values, uint16_t new_val_size, uint16_t *old_val_size)
+
+- Update a record.
+
+Find target record and modify the values
+If found matching key, update the value of the record to values string with its new_val_size and store its size in old_val_size
+If success, return 0. Otherwise, return non zero value.
+The caller should allocate memory for a old_val_size
+
+Only existed key value record can be found. Otherwise, API return non zero value.
+
+return 0 (SUCCESS): operation is successfully done
+
+return non zero (FAILED): operation is failed
+
+- parameters
+  - table_id - table id of the opened database
+  - key - record key to find
+  - values - new value string to be applied into record
+  - new_val_size - new value string's length
+  - old_val_size - existed record value's length
+
+- return value - status code(0 is ok)
+- exceptions
+  - if error occurred in File and Index manager module or Sub layer API, print error message and return -1
+---
+6. int idx_update_by_key_trx(int64_t table_id, int64_t key, char *values, uint16_t new_val_size, uint16_t *old_val_size, int trx_id)
+
+- Update a record for the transaction having trx_id
+
+Find target record and modify the values for the transaction having transaction id
+If found matching key, update the value of the record to values string with its new_val_size and store its size in old_val_size
+If success, return 0. Otherwise, return non zero value.
+The caller should allocate memory for a old_val_size
+
+After find target record by key, try to acquire shared lock by calling lock manager API.
+If there is any failure in locking, abort given transaction by calling transaction manager API and return -1.
+After acquiring corresponding lock, read page and get target record value.
+
+By using special buffer API (direct read\write page), multiple threads read record parallel or write record concurrently in same page.
+
+As buffer manager use page latch, Index manager release page latch right after find operation done.
+
+Before finishing update operation, add in-memory log for rollback in abort by calling transaction mananger API. 
+
+Only existed key value record can be found. Otherwise, API return non zero value.
+
+return 0 (SUCCESS): operation is successfully done, and the transaction can continue the next operation.
+
+return non zero (FAILED): operation is failed (e.g., deadlock detected), and the transaction should be aborted.
+
+- parameters
+  - table_id - table id of the opened database
+  - key - record key to find
+  - values - new value string to be applied into record
+  - new_val_size - new value string's length
+  - old_val_size - existed record value's length
+  - trx_id - id of transaction which called this api 
+
+- return value - status code(0 is ok)
+- exceptions
+  - if error occurred in File and Index manager module or Sub layer API, print error message and abort transaction and return -1
 ---
 ## PAGE FORMAT IN FIM
 1. Header Page
@@ -227,6 +326,24 @@ inner structure and function used in File and Index Manager
   - find the record value with given key
   - save record valud in ret_val(caller must provide it) and set size in val_size
   - you can get existence state by using key only and setting ret_val and val_size null
+  - return 0 if success or -1 if fail
+
+- int find_record_trx(int64_t table_id, int64_t key, char *ret_val, uint16_t* val_size, int trx_id)
+  - find the record value with given key with strict 2PL
+  - save record valud in ret_val(caller must provide it) and set size in val_size
+  - you can get existence state by using key only and setting ret_val and val_size null
+  - return 0 if success or -1 if fail
+
+- int update_record(int64_t table_id, int64_t key, char *values, uint16_t new_val_size, uint16_t *old_val_size)
+  - update the record value with given key
+  - i.e. update into given values with the size of new_val_size
+  - store original value in old_val_size as no structure changed, new value's length should be less or equal to original length
+  - return 0 if success or -1 if fail
+
+- int update_record_trx(int64_t table_id, int64_t key, char *values, uint16_t new_val_size, uint16_t *old_val_size, int trx_id)
+  - update the record value with given key with strict 2PL
+  - i.e. update into given values with the size of new_val_size
+  - store original value in old_val_size as no structure changed, new value's length should be less or equal to original length
   - return 0 if success or -1 if fail
    
 - int insert_record(int64_t table_id, int64_t key, char *value, uint16_t val_size)
