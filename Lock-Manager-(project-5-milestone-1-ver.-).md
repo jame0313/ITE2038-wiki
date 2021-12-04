@@ -13,7 +13,7 @@ By using transaction manager, lock manager detects deadlock situation and abort 
 
 In lock manager, we use lock manager latch to enforce transactions use lock manager API once at time for atomicity of lock table. 
 
-To find page lock in lock manager, lock manager use hash table that maps page_id(table id and page number) to lock header object. As hash table expected to find such object in constant time if existed, we can access lock table fastly.
+To find page lock in lock manager, lock manager use hash table that maps page_id(table id and page number) to lock header object. As hash table expected to find such object in constant time if existed, we can access lock table fast.
 
 In page lock list, lock manager maintains record lock objects with linked list structure.
 
@@ -55,7 +55,7 @@ If success, return 0. Otherwise, return non zero value.
 
 - exceptions - (none)
 ---
-2. lock_t* lock_acquire(int64_t table_id, pagenum_t page_id, int64_t key, int trx_id, int lock_mode)
+2. int lock_acquire(int64_t table_id, pagenum_t page_id, int64_t key, uint32_t slot_number, int trx_id, int lock_mode)
 
 - Allocate and append a new lock object of the record having the key to the corresponding page lock list of having page id
 
@@ -85,10 +85,11 @@ If there is no predecessor's conflicting lock object, return the address of the 
   - table_id - table id of the opened database
   - page_id - page number of the corresponding record resides in
   - key - key of record
+  - slot_number - slot number where target record reside in
   - trx_id - id of transaction that requests lock
   - lock_mode - type of lock (0(shared) or 1(exclusive))
 
-- return value - new(or previous) lock object pointer or NULL if error occurred (e.g. deadlock)
+- return value - 0 if success or -1 if error occurred (e.g. deadlock)
 
 - exceptions - (none)
 
@@ -184,6 +185,8 @@ Lock object is the entry of page lock list that contains lock information.
   - previous lock in page lock list
 - lock_t *nxt_lock = nullptr
   - next lock in page lock list
+- lock_t *prev_lock_in_trx = nullptr
+  - prev lock in transaction list
 - lock_t *nxt_lock_in_trx = nullptr
   - next lock in transaction list
 - lock_head_t *sentinel = nullptr
@@ -227,6 +230,15 @@ inner structure and function used in Lock Manager
   - corresponding value is lock header's pointer
   - use LM::hash_pair to hash pair object
 
+- lock_t* make_and_init_new_lock_object(int64_t table_id, pagenum_t page_id, int64_t key, uint32_t slot_number, int trx_id, int lock_mode)
+  - make new lock object and initialize lock object with given parameter
+  - return new lock object pointer
+
+- int connect_with_lock_head(int64_t table_id, pagenum_t page_id, lock_t* lock_obj)
+  - connect given lock object with lock header
+  - if there is no corresponding lock header, make new one
+  - return 0 if success, or non-zero if not
+
 - lock_head_t* find_lock_head_in_table(int64_t table_id, pagenum_t pagenum)
   - find lock header object in lock table
   - where it's pagenum and table id is same with given parameter
@@ -235,6 +247,13 @@ inner structure and function used in Lock Manager
 - lock_head_t* insert_new_lock_head_in_table(int64_t table_id, pagenum_t pagenum)
   - insert lock header object into lock table at the position where it's pagenum and table id is same with given parameter
   - return new lock header object's pointer inserted
+
+- void append_lock_in_lock_list(lock_t* lock_obj)
+  - append lock in the lock list in object's sentinel
+  - and also append in the trx lock list
+
+- void remove_lock_from_lock_list(lock_t* lock_obj)
+  - remove lock in the lock list in object's sentinel
 
 - lock_t* find_compatible_lock_in_lock_list(lock_head_t* lock_head, lock_t* lock_obj)
   - find lock object that compatible with given lock object in page lock list defined by lock header
@@ -251,11 +270,11 @@ inner structure and function used in Lock Manager
 - void wake_conflicting_lock_in_lock_list(lock_t* lock_obj)
   - find and wake up the successor if it is waiting for the current transaction releasing the lock and no conflicting transaction left after releasing this lock
 
-- lock_t* try_to_acquire_lock_object(int64_t table_id, pagenum_t page_id, int64_t key, int trx_id, int lock_mode)
+- int try_to_acquire_lock_object(int64_t table_id, pagenum_t page_id, int64_t key, int trx_id, int lock_mode)
   - Allocate and append a new lock object to the lock list of the record having the page id and the key.
   - If there is a predecessor's conflicting lock object in the lock list, sleep until the predecessor releases its lock.
-  - If there is no predecessor's conflicting lock object, return the address of the new lock object.
-  - If an error occurs, return NULL
+  - If there is no predecessor's conflicting lock object, return 0
+  - If an error occurs, return -1
 
 - int release_acquired_lock(lock_t* lock_obj)
   - Remove the lock object from the lock list.
