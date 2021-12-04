@@ -91,6 +91,10 @@ If success, return 0. Otherwise, return non zero value.
 Before starting DBMS, each layer initialize their status if needed.
 In Buffer Manager, call init_buffer(allocate the buffer pool). 
 
+In Lock Manager, call init_lock_table().
+
+In Transaction Manager, call init_trx_manager().
+
 - parameters
   - num_buf - size of buffer (num of buffer page)
 
@@ -105,7 +109,13 @@ Shutdown your database management system.
 If success, return 0. Otherwise, return non zero value.
 
 Before shutdown DBMS, each layer finish and save their status if needed.
+
+In Transaction Manager, abort all unfinished transaction and release all lock by calling close_trx_manager API.
+
+In Lock Manager, clean lock table by calling close_lock_table API.
+
 In Buffer Manager, flush all dirty page by calling buffer_close_table_file API.
+
 In Disk Space Manager, close all file by calling file_close_table_file API.
 
 - parameters - (none)
