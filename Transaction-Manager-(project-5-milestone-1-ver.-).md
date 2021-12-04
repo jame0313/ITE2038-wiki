@@ -17,6 +17,12 @@ In transaction object, transaction manager maintains transaction lock list with 
 
 To successfully abort transaction and rollback all effects, transaction manager uses transaction log list of modification in current transaction.
 
+To avoid deadlock problem between several manager-level latch, DBMS needs to break circular wait condition by acquiring lock in sequential order.
+
+When several layer latches needed in one API, it should acquire multiple latch by following sequence.
+
+Lock Manager Latch -> Transaction Manager Latch -> Buffer Manager Latch -> (Page Latch)
+
 ------
 
 ##  TRANSACTION MANAGER API
